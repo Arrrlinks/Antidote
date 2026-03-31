@@ -9,8 +9,9 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-    # Persist SQLite database on host.
+      SQLITE_PATH: /data/antidote.sqlite
+    # Persist SQLite database in a dedicated host directory.
     volumes:
-      - ./antidote.sqlite:/app/antidote.sqlite
+      - ./data:/data
     restart: unless-stopped
 

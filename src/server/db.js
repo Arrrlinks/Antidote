@@ -1,10 +1,14 @@
 const path = require('path');
+const fs = require('fs/promises');
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 
-const DB_PATH = path.join(__dirname, '..', '..', 'antidote.sqlite');
+const DB_PATH = process.env.SQLITE_PATH || path.join(__dirname, '..', '..', 'antidote.sqlite');
 
 async function initDb() {
+  // SQLite cannot create missing folders, so ensure the parent path exists first.
+  await fs.mkdir(path.dirname(DB_PATH), { recursive: true });
+
   const db = await open({
     filename: DB_PATH,
     driver: sqlite3.Database

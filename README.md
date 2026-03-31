@@ -19,6 +19,14 @@ npm start
 
 Then open `http://localhost:3000`.
 
+## Docker Compose
+
+```powershell
+docker compose up --build
+```
+
+SQLite is persisted in `./data/antidote.sqlite` on the host.
+
 ## Usage
 
 - Use **Select PDFs** to upload files manually.
@@ -41,6 +49,14 @@ If `npm install` fails with `spawn ... bash.exe ENOENT`, force npm shell to cmd:
 
 ```powershell
 npm config set script-shell "C:\Windows\System32\cmd.exe"
+```
+
+If Docker fails with `SQLITE_CANTOPEN`, remove any mistaken folder named `antidote.sqlite` at project root, then restart compose:
+
+```powershell
+Remove-Item -Recurse -Force .\antidote.sqlite
+docker compose down
+docker compose up --build
 ```
 
 ## API
