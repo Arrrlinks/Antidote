@@ -1,0 +1,16 @@
+services:
+  antidote:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: antidote-app
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    # Persist SQLite database on host.
+    volumes:
+      - ./antidote.sqlite:/app/antidote.sqlite
+    restart: unless-stopped
+

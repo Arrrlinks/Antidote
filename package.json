@@ -1,0 +1,20 @@
+{
+  "name": "antidote",
+  "version": "1.0.0",
+  "description": "Antidote - extraction de donnees bien-etre depuis PDFs et stats web",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "smoke": "node scripts/smoke-import.js",
+    "test": "node -e \"console.log('No automated tests yet')\""
+  },
+  "private": true,
+  "dependencies": {
+    "express": "^4.21.2",
+    "multer": "^2.0.2",
+    "pdf-parse": "^1.1.1",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  }
+}

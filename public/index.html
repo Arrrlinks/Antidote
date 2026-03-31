@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antidote</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <div>
+        <p class="eyebrow">Health Tracking</p>
+        <h1>Antidote</h1>
+      </div>
+      <p class="subtitle">Daily insights from MyTherapy data, focused on mood, headaches, fatigue, and anxiety</p>
+    </header>
+
+    <section class="panel actions">
+      <h2>Import Data</h2>
+      <form id="uploadForm" class="upload-form">
+        <label for="pdfInput" class="btn secondary">Select PDFs</label>
+        <input id="pdfInput" name="pdfs" type="file" accept="application/pdf" multiple>
+      </form>
+      <div id="uploadQueue" class="upload-queue"></div>
+      <p id="status" class="status">Ready.</p>
+    </section>
+
+    <section class="toolbar panel">
+      <div>
+        <h2>Analytics Range</h2>
+        <p class="helper">Choose a period and move backward/forward in time.</p>
+      </div>
+      <div class="toolbar-controls">
+        <div id="rangeControls" class="range-controls" role="tablist" aria-label="Period selection"></div>
+        <div class="nav-controls">
+          <button id="prevRangeBtn" class="btn secondary" type="button">Previous</button>
+          <button id="nextRangeBtn" class="btn secondary" type="button">Next</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="cards" id="kpis"></section>
+
+    <section class="panel">
+      <h2>Mood Overview (0 to 4)</h2>
+      <div id="moodInsights" class="insights"></div>
+      <div id="heatmapLegend" class="heatmap-legend"></div>
+      <div id="moodHeatmap" class="heatmap"></div>
+    </section>
+
+    <section id="metricBlocks" class="metric-grid"></section>
+
+    <section class="panel">
+      <h2>Monthly Rollup</h2>
+      <div class="table-wrap">
+        <table id="monthlyTable">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Mood</th>
+              <th>Headache</th>
+              <th>Fatigue</th>
+              <th>Anxiety</th>
+              <th>Tracked Days</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Imported Reports</h2>
+      <div class="table-wrap">
+        <table id="reportsTable">
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>Date</th>
+              <th>Mood (0-4)</th>
+              <th>Headache</th>
+              <th>Fatigue</th>
+              <th>Anxiety</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
+
