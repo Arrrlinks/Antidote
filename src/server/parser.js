@@ -161,10 +161,37 @@ function extractDailyMetrics(text, reportDate) {
   const searchText = buildSearchText(text);
   const dayCount = daysInMonth(reportDate);
 
-  const moodSection = extractSection(searchText, 'humeur', ['presentation du symptome', 'mytherapy', 'who-5']) || '';
-  const headacheSection = extractSection(searchText, 'symptome\\s*:\\s*(?:maux? de tete|mal de tete|headache)', ['presentation du symptome', 'mytherapy', 'who-5']) || '';
-  const fatigueSection = extractSection(searchText, 'symptome\\s*:\\s*(?:etre\\s*fatigue\\(e\\)|fatigue)', ['presentation du symptome', 'mytherapy', 'who-5']) || '';
-  const anxietySection = extractSection(searchText, 'symptome\\s*:\\s*(?:anxiete|anxiety)', ['presentation du symptome', 'mytherapy', 'who-5']) || '';
+  const sectionEndings = [
+    'presentation du symptome',
+    'symptom overview',
+    'mytherapy',
+    'who-5',
+    'who 5',
+    'who-5 well-being',
+    'who-5 wellbeing',
+    'mood'
+  ];
+
+  const moodSection =
+    extractSection(searchText, '(?:humeur|mood)', sectionEndings) || '';
+  const headacheSection =
+    extractSection(
+      searchText,
+      '(?:symptome\\s*:\\s*(?:maux? de tete|mal de tete|headache)|symptom\\s*overview\\s*:\\s*headaches?)',
+      sectionEndings
+    ) || '';
+  const fatigueSection =
+    extractSection(
+      searchText,
+      '(?:symptome\\s*:\\s*(?:etre\\s*fatigue\\(e\\)|fatigue)|symptom\\s*overview\\s*:\\s*fatigue)',
+      sectionEndings
+    ) || '';
+  const anxietySection =
+    extractSection(
+      searchText,
+      '(?:symptome\\s*:\\s*(?:anxiete|anxiety)|symptom\\s*overview\\s*:\\s*anxiety)',
+      sectionEndings
+    ) || '';
 
   const moodDigits = readDigitsLine(moodSection, dayCount);
   const headacheDigits = readDecimalAndDigits(headacheSection, dayCount) || readDigitsLine(headacheSection, dayCount);
@@ -212,4 +239,3 @@ module.exports = {
   parsePdfBuffer,
   parsePdfFile
 };
-
