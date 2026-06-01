@@ -301,7 +301,7 @@ function percentChange(currentValue, previousValue) {
   return ((currentValue - previousValue) / Math.abs(previousValue)) * 100;
 }
 
-function renderDeltaBadge(deltaPercent) {
+function renderDeltaBadge(deltaPercent, isPositiveGood = true) {
   if (typeof deltaPercent !== 'number' || Number.isNaN(deltaPercent)) return '';
 
   const rounded = Math.round(Math.abs(deltaPercent));
@@ -310,7 +310,8 @@ function renderDeltaBadge(deltaPercent) {
   }
 
   const isUp = deltaPercent > 0;
-  const directionClass = isUp ? 'card-delta-up' : 'card-delta-down';
+  const isGood = isPositiveGood ? isUp : !isUp;
+  const directionClass = isGood ? 'card-delta-up' : 'card-delta-down';
   const triangle = isUp ? '&#9650;' : '&#9660;';
   return `<span class="card-delta ${directionClass}">${triangle} ${rounded}%</span>`;
 }
@@ -325,15 +326,15 @@ function renderKpis(windowRows, windowStart, windowEnd) {
   const cards = [
     { label: 'Period', value: rangeText, delta: null },
     { label: 'Tracked Days', value: String(stats.count || 0), delta: null },
-    { label: 'Mood Avg (0-4)', value: fmt(stats.moodAvg), delta: percentChange(stats.moodAvg, previousStats.moodAvg) },
-    { label: 'Headache Avg', value: fmt(stats.headacheAvg), delta: percentChange(stats.headacheAvg, previousStats.headacheAvg) },
-    { label: 'Fatigue Avg', value: fmt(stats.fatigueAvg), delta: percentChange(stats.fatigueAvg, previousStats.fatigueAvg) },
-    { label: 'Anxiety Avg', value: fmt(stats.anxietyAvg), delta: percentChange(stats.anxietyAvg, previousStats.anxietyAvg) }
+    { label: 'Mood Avg (0-4)', value: fmt(stats.moodAvg), delta: percentChange(stats.moodAvg, previousStats.moodAvg), deltaPositiveGood: true },
+    { label: 'Headache Avg', value: fmt(stats.headacheAvg), delta: percentChange(stats.headacheAvg, previousStats.headacheAvg), deltaPositiveGood: false },
+    { label: 'Fatigue Avg', value: fmt(stats.fatigueAvg), delta: percentChange(stats.fatigueAvg, previousStats.fatigueAvg), deltaPositiveGood: false },
+    { label: 'Anxiety Avg', value: fmt(stats.anxietyAvg), delta: percentChange(stats.anxietyAvg, previousStats.anxietyAvg), deltaPositiveGood: false }
   ];
 
   kpisEl.innerHTML = cards
     .map((card) => {
-      const deltaBadge = showDelta ? renderDeltaBadge(card.delta) : '';
+      const deltaBadge = showDelta ? renderDeltaBadge(card.delta, card.deltaPositiveGood !== false) : '';
       return `<article class="card"><div class="label">${card.label}</div><div class="value">${card.value}</div>${deltaBadge}</article>`;
     })
     .join('');

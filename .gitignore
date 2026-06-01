@@ -144,3 +144,5 @@ npm-debug.log
 .vscode
 pdfs
 antidote.sqlite
+
+docker-compose.yml.bkp
