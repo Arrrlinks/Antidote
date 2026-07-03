@@ -92,27 +92,97 @@ function readDigitsLine(section, dayCount) {
   for (let i = lines.length - 1; i >= 0; i -= 1) {
     const line = lines[i];
     if (/^\d{20,}$/.test(line)) {
-      return line.length >= dayCount ? line.slice(0, dayCount) : null;
+      return line.length >= dayCount ? line : null;
     }
   }
 
   const fallback = section.match(/(\d{20,})/g);
   if (!fallback || !fallback.length) return null;
   const candidate = fallback[fallback.length - 1];
-  return candidate.length >= dayCount ? candidate.slice(0, dayCount) : null;
+  return candidate.length >= dayCount ? candidate : null;
 }
 
-function readDecimalAndDigits(section, dayCount) {
+function readDecimalAndDigits(section) {
   if (!section) return null;
   const compact = section.replace(/\s+/g, '');
-  const match = compact.match(/\d{1,2}[.,]\d{2}(\d{20,})/);
+  const match = compact.match(/(\d{1,2}[.,]\d{2})(\d{20,})/);
   if (!match || !match[1]) return null;
-  return match[1].length >= dayCount ? match[1].slice(0, dayCount) : null;
+  return {
+    average: toNumber(match[1]),
+    sequence: match[2]
+  };
 }
 
-function toSeries(sequence, transformFn) {
+function averageOf(values) {
+  if (!values.length) return null;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function decodeCompressedDigitSeries(sequence, dayCount, max = 10, expectedAverage = null) {
   if (!sequence) return [];
-  return sequence.split('').map((char) => transformFn(Number.parseInt(char, 10)));
+
+  const digits = String(sequence).replace(/\D/g, '');
+  if (!digits) return [];
+
+  if (max < 10 || digits.length <= dayCount) {
+    return digits
+      .slice(0, dayCount)
+      .split('')
+      .map((char) => Number.parseInt(char, 10));
+  }
+
+  let best = null;
+  let bestScore = Number.POSITIVE_INFINITY;
+
+  function visit(position, values) {
+    const remainingValues = dayCount - values.length;
+    const remainingDigits = digits.length - position;
+
+    if (remainingValues < 0 || remainingDigits < remainingValues) return;
+    if (remainingDigits > remainingValues * 2) return;
+
+    if (values.length === dayCount) {
+      if (position !== digits.length) return;
+
+      const actualAverage = averageOf(values);
+      const score =
+        typeof expectedAverage === 'number'
+          ? Math.abs(Number(actualAverage.toFixed(2)) - expectedAverage)
+          : 0;
+
+      if (score < bestScore) {
+        best = values;
+        bestScore = score;
+      }
+      return;
+    }
+
+    if (digits.startsWith('10', position) && max >= 10) {
+      visit(position + 2, values.concat(10));
+    }
+
+    visit(position + 1, values.concat(Number.parseInt(digits[position], 10)));
+  }
+
+  visit(0, []);
+
+  if (best) return best;
+
+  return digits
+    .slice(0, dayCount)
+    .split('')
+    .map((char) => Number.parseInt(char, 10));
+}
+
+function toSeries(sequence, transformFn, options = {}) {
+  if (!sequence) return [];
+  const rawValues = decodeCompressedDigitSeries(
+    sequence,
+    options.dayCount || sequence.length,
+    options.max || 10,
+    options.expectedAverage
+  );
+  return rawValues.map((value) => transformFn(value));
 }
 
 function normalizeMoodRaw(raw) {
@@ -194,14 +264,32 @@ function extractDailyMetrics(text, reportDate) {
     ) || '';
 
   const moodDigits = readDigitsLine(moodSection, dayCount);
-  const headacheDigits = readDecimalAndDigits(headacheSection, dayCount) || readDigitsLine(headacheSection, dayCount);
-  const fatigueDigits = readDecimalAndDigits(fatigueSection, dayCount) || readDigitsLine(fatigueSection, dayCount);
-  const anxietyDigits = readDecimalAndDigits(anxietySection, dayCount) || readDigitsLine(anxietySection, dayCount);
+  const headacheDigits = readDecimalAndDigits(headacheSection);
+  const fatigueDigits = readDecimalAndDigits(fatigueSection);
+  const anxietyDigits = readDecimalAndDigits(anxietySection);
 
-  const mood = toSeries(moodDigits, normalizeMoodRaw);
-  const headache = toSeries(headacheDigits, normalizeSymptomRaw);
-  const fatigue = toSeries(fatigueDigits, normalizeSymptomRaw);
-  const anxiety = toSeries(anxietyDigits, normalizeSymptomRaw);
+  const mood = toSeries(moodDigits, normalizeMoodRaw, { dayCount, max: 5 });
+  const headache = headacheDigits
+    ? toSeries(headacheDigits.sequence, normalizeSymptomRaw, {
+        dayCount,
+        max: 10,
+        expectedAverage: headacheDigits.average
+      })
+    : toSeries(readDigitsLine(headacheSection, dayCount), normalizeSymptomRaw, { dayCount, max: 10 });
+  const fatigue = fatigueDigits
+    ? toSeries(fatigueDigits.sequence, normalizeSymptomRaw, {
+        dayCount,
+        max: 10,
+        expectedAverage: fatigueDigits.average
+      })
+    : toSeries(readDigitsLine(fatigueSection, dayCount), normalizeSymptomRaw, { dayCount, max: 10 });
+  const anxiety = anxietyDigits
+    ? toSeries(anxietyDigits.sequence, normalizeSymptomRaw, {
+        dayCount,
+        max: 10,
+        expectedAverage: anxietyDigits.average
+      })
+    : toSeries(readDigitsLine(anxietySection, dayCount), normalizeSymptomRaw, { dayCount, max: 10 });
 
   const dailyPoints = buildDailyPoints(reportDate, { mood, headache, fatigue, anxiety });
 
@@ -237,5 +325,8 @@ async function parsePdfFile(filePath) {
 
 module.exports = {
   parsePdfBuffer,
-  parsePdfFile
+  parsePdfFile,
+  _internals: {
+    decodeCompressedDigitSeries
+  }
 };
